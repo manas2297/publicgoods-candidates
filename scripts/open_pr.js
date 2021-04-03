@@ -28,6 +28,7 @@ function apiCall(my_options, MODE = 'GET') {
         if(error){
           reject(error);
         }else{
+          console.log(response)
           if(response.statusCode==200){
             resolve(JSON.parse(body));
           } else {
