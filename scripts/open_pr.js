@@ -20,8 +20,13 @@ options = {
     'Accept': 'application/vnd.github.v3+json'
   }
 }
-
+/**
+ * 
+ * @param {Object} my_options request parameters
+ * @param {String} MODE request method GET | POST | DELETE
+ */
 function apiCall(my_options, MODE = 'GET') {
+
   if (MODE === 'GET') {
     const promise = new Promise((resolve, reject) => {
       request.get(my_options, function(error, response, body) {
@@ -31,12 +36,16 @@ function apiCall(my_options, MODE = 'GET') {
           if(response.statusCode==200 || response.statusCode == 201){
             resolve(JSON.parse(body));
           } else {
-            resolve(JSON.parse(body));
+            resolve(null);
           }
         }
       });
-    }).then(data => data);
+    })
+      .then(data => data)
+      .catch(err => console.err(err.message));
+
     return promise;
+
   } else if (MODE === 'POST') {
     const promise = new Promise((resolve, reject) => {
       request.post(my_options, function(error, response, body) {
@@ -51,8 +60,12 @@ function apiCall(my_options, MODE = 'GET') {
           }
         }
       });
-    }).then(data => data);
+    })
+      .then(data => data)
+      .catch(err => console.error(err.message));
+
     return promise;
+
   } else if (MODE === 'DELETE') {
     const promise = new Promise((resolve, reject) => {
       request.delete(my_options, function(error, response, body) {
@@ -68,7 +81,7 @@ function apiCall(my_options, MODE = 'GET') {
         }
       });
     }).then(data => data)
-    .catch(err => err);
+    .catch(err => console.error(err.message));
     return promise;
   }
 }
@@ -161,55 +174,28 @@ async function commitFiles(head){
       
       let responseIfFileExists;
       let fileContents;
+
       try{
-        let promise = await apiCall(my_options);
-        responseIfFileExists = promise;
+        responseIfFileExists = await apiCall(my_options);
         if (!fs.existsSync(file)) {
+
           my_options['url'] = baseURL + 'git/trees/' + head;
-          let base_tree = await apiCall(my_options); // for original
-          console.log(base_tree);
+          let base_tree = await apiCall(my_options);
+
           const productTree = base_tree.tree.filter(item => item.path === 'products');
-          console.log(productTree);
           my_options['url'] = productTree[0].url;
-          const productTreeList = await apiCall(my_options); // products folder list
-          // console.log(productTreeList);
+
+          const productTreeList = await apiCall(my_options);
+
           const deletedFile = productTreeList.tree.filter(item => item.path === file.split('/')[1]);
 
-          console.log(deletedFile,"deleted File");
-          my_options['url'] = baseURL + 'contents/' + commitFile; // to create a new product tree without the file
+          my_options['url'] = baseURL + 'contents/' + commitFile;
           my_options['body'] = JSON.stringify({
-            'message': 'BLD: delete file' + file,
+            'message': 'BLD: Delete file ' + file,
             'sha': deletedFile[0].sha,
             'branch': branchName,
           });
           const deletedCommit = await apiCall(my_options, 'DELETE');
-          console.log(deletedCommit, 'newPL');
-          // base_tree = base_tree.tree.map(item => {
-          //   if (item.path === 'products') {
-          //     item.sha = newPL.sha;
-          //     item.url = newPL.url;
-          //     return item;
-          //   }
-          //   return item;
-          // });
-          // my_options['body'] = JSON.stringify({
-          //   "tree": base_tree,
-          // });
-          // console.log(my_options);
-          // const newBaseTree = await apiCall(my_options, 'POST');
-          // console.log(newBaseTree);
-          //commit create krna hai
-          // let body = {
-          //   'message': 'BLD: delete file' + file,
-          //   'sha': newBaseTree.sha,
-          //   'parents': [head],
-          // };
-
-          // my_options['body'] = JSON.stringify(body);
-          // my_options['url'] = baseURL + 'git/commits';
-          // console.log(my_options);
-          // const response = await apiCall(my_options, 'POST');
-          // console.log(response, 'reponse');
         }
         else {
           fileContents = fs.readFileSync(file, 'utf8')
@@ -255,7 +241,7 @@ function createPR(files){
     'title': 'Add new product(s): ' + files.toString(),
     'head': branchName,
     'base': 'master',
-    'body': 'Add new product(s) from [unicef/publicgoods-candidates](https://github.com/unicef/publicgoods/candidates)'
+    'body': 'Add/Delete product(s) from [unicef/publicgoods-candidates](https://github.com/unicef/publicgoods/candidates)'
   })
 
   request.post(options, function (error, response, body) {
