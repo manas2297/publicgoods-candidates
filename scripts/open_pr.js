@@ -63,11 +63,12 @@ function apiCall(my_options, MODE = 'GET') {
             console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
             resolve(JSON.parse(body));
           }else {
-            resolve(null);
+            resolve(JSON.parse(body));
           }
         }
       });
-    }).then(data => data);
+    }).then(data => data)
+    .catch(err => err);
     return promise;
   }
 }
