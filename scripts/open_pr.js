@@ -20,6 +20,22 @@ options = {
   }
 }
 
+function apiCall(my_options) {
+  return new Promise((resolve, reject) => {
+    request.get(my_options, function(error, response, body) {
+      if(error){
+        reject(error);
+      }else{
+        if(response.statusCode==200){
+          resolve(JSON.parse(body));
+        } else {
+          resolve(null);
+        }
+      }
+    });
+  });
+}
+
 /** 
  * Returns a Javascript object (array) of the files that have changed
  * @return {Array} List of changed files
@@ -105,40 +121,19 @@ async function commitFiles(head){
       let my_options = options;
       my_options['url'] = baseURL + 'contents/' + commitFile;
 
-      let promise = new Promise((resolve, reject) => {
-        request.get(my_options, function(error, response, body) {
-          if(error){
-            reject(error);
-          }else{
-            if(response.statusCode==200){
-              resolve(JSON.parse(body));
-            } else {
-              resolve(null);
-            }
-          }
-        });
-      });
+      
       let responseIfFileExists;
       let fileContents;
       try{
-        responseIfFileExists = await promise;
+        let promise = await apiCall(my_options);
+        responseIfFileExists = promise;
         if (!fs.existsSync(file)) {
           my_options['url'] = baseURL + 'git/trees/' + head;
-          promise = new Promise((resolve, reject) => {
-            request.get(my_options, function(error, response, body) {
-              if(error){
-                reject(error);
-              }else{
-                if(response.statusCode==200){
-                  resolve(JSON.parse(body));
-                } else {
-                  resolve(null);
-                }
-              }
-            })
-          });
-          let base_tree = await promise;
-          console.log(base_tree);
+          const base_tree = await apiCall(my_options);
+          const productTree = base_tree.filter(item => item.path === 'products');
+          my_options['url'] = productTree.url;
+          const productTreeList = await apiCall(my_options);
+          console.log(productTreeList);
         }
         else console.log("file not deleted")
         fileContents = fs.readFileSync(file, 'utf8')
