@@ -53,7 +53,7 @@ function apiCall(my_options, MODE = 'GET') {
       });
     }).then(data => data);
     return promise;
-  } else if (mode === 'DELETE') {
+  } else if (MODE === 'DELETE') {
     const promise = new Promise((resolve, reject) => {
       request.delete(my_options, function(error, response, body) {
         if(error){
