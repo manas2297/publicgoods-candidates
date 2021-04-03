@@ -179,7 +179,7 @@ async function commitFiles(head){
           my_options['url'] = baseURL + 'contents/' + commitFile; // to create a new product tree without the file
           my_options['body'] = JSON.stringify({
             'message': 'BLD: delete file' + file,
-            'sha': deletedFile.sha,
+            'sha': deletedFile[0].sha,
             'branch': branchName,
           });
           const deletedCommit = await apiCall(my_options, 'DELETE');
