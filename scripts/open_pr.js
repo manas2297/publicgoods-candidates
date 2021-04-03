@@ -133,6 +133,7 @@ async function commitFiles(head){
           const base_tree = await apiCall(my_options);
           console.log(base_tree);
           const productTree = base_tree.tree.filter(item => item.path === 'products');
+          console.log(productTree);
           my_options['url'] = productTree.url;
           const productTreeList = await apiCall(my_options);
           console.log(productTreeList);
