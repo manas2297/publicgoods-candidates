@@ -168,7 +168,9 @@ async function commitFiles(head){
             if (item.path === 'products') {
               item.sha = newPL.sha;
               item.url = newPL.url;
+              return item;
             }
+            return item;
           });
           my_options['body'] = JSON.stringify({
             "tree": base_tree,
