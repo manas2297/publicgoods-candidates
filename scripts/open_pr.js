@@ -182,6 +182,7 @@ async function commitFiles(head){
           let body = {
             'message': 'BLD: delete file' + file,
             'sha': newBaseTree.sha,
+            'parents': [head],
           };
 
           my_options['body'] = JSON.stringify(body);
