@@ -31,7 +31,7 @@ function apiCall(my_options, MODE = 'GET') {
           if(response.statusCode==200 || response.statusCode == 201){
             resolve(JSON.parse(body));
           } else {
-            resolve(null);
+            resolve(JSON.parse(body));
           }
         }
       });
