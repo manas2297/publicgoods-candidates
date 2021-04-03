@@ -21,7 +21,7 @@ options = {
 }
 
 function apiCall(my_options) {
-  return new Promise((resolve, reject) => {
+  const promise = new Promise((resolve, reject) => {
     request.get(my_options, function(error, response, body) {
       if(error){
         reject(error);
@@ -33,7 +33,8 @@ function apiCall(my_options) {
         }
       }
     });
-  });
+  }).then(data => data);
+  return promise;
 }
 
 /** 
@@ -126,10 +127,12 @@ async function commitFiles(head){
       let fileContents;
       try{
         let promise = await apiCall(my_options);
+        console.log(promise);
         responseIfFileExists = promise;
         if (!fs.existsSync(file)) {
           my_options['url'] = baseURL + 'git/trees/' + head;
           const base_tree = await apiCall(my_options);
+          console.log(base_tree);
           const productTree = base_tree.filter(item => item.path === 'products');
           my_options['url'] = productTree.url;
           const productTreeList = await apiCall(my_options);
