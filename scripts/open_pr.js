@@ -83,14 +83,14 @@ function createBranch(head) {
     } else {
       console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
       console.log('body:', body); // Print the body
-      commitFiles();
+      commitFiles(head);
     }
   });
 }
 
 /** Commits the files that have changed
  */
-async function commitFiles(){
+async function commitFiles(head){
   const files = getChangedFiles();
   console.log('These are the files that have changed:')
   console.log(files);
@@ -122,7 +122,24 @@ async function commitFiles(){
       let fileContents;
       try{
         responseIfFileExists = await promise;
-        if (!fs.existsSync(file)) console.log("No file")
+        if (!fs.existsSync(file)) {
+          my_options['url'] = baseURL + 'git/trees/' + head;
+          promise = new Promise((resolve, reject) => {
+            request.get(my_options, function(error, response, body) {
+              if(error){
+                reject(error);
+              }else{
+                if(response.statusCode==200){
+                  resolve(JSON.parse(body));
+                } else {
+                  resolve(null);
+                }
+              }
+            })
+          });
+          let base_tree = await promise;
+          console.log(base_tree);
+        }
         else console.log("file not deleted")
         fileContents = fs.readFileSync(file, 'utf8')
         var body = {
