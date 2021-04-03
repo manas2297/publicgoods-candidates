@@ -186,40 +186,36 @@ async function commitFiles(head){
 
           my_options['body'] = JSON.stringify(body);
           my_options['url'] = baseURL + 'git/commits';
+          console.log(my_options);
           const response = await apiCall(my_options, 'POST');
           console.log(response, 'reponse');
-
-
-
-
         }
-        else console.log("file not deleted")
-
-
-        fileContents = fs.readFileSync(file, 'utf8')
-        var body = {
-          'content': btoa(fileContents),
-          'branch': branchName
-        }
-        if(responseIfFileExists){
-          body['message'] = 'BLD: edit file ' + file;
-          body['sha'] = responseIfFileExists['sha'];
-        }else{
-          body['message'] = 'BLD: add file ' + file;
-        }
-        my_options['body'] = JSON.stringify(body);
-  
-        promise = new Promise((resolve, reject) => {
-          request.put(my_options, function(error, response, body) {
-            if(error){
-              reject(error);
-            }else{
-              resolve(body);
-            }
+        else {
+          fileContents = fs.readFileSync(file, 'utf8')
+          var body = {
+            'content': btoa(fileContents),
+            'branch': branchName
+          }
+          if(responseIfFileExists){
+            body['message'] = 'BLD: edit file ' + file;
+            body['sha'] = responseIfFileExists['sha'];
+          }else{
+            body['message'] = 'BLD: add file ' + file;
+          }
+          my_options['body'] = JSON.stringify(body);
+    
+          promise = new Promise((resolve, reject) => {
+            request.put(my_options, function(error, response, body) {
+              if(error){
+                reject(error);
+              }else{
+                resolve(body);
+              }
+            });
           });
-        });
-        response = await promise;
-        console.log('Received response: ' + response)
+          response = await promise;
+          console.log('Received response: ' + response)
+        }
       } catch (err) {
         console.error(err.message);
       }
