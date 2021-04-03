@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const btoa = require('btoa');
 const request = require('request');
+const { resolve } = require('path');
 
 const githubUser = 'manas2297';
 const githubRepo = 'products';
@@ -20,21 +21,39 @@ options = {
   }
 }
 
-function apiCall(my_options) {
-  const promise = new Promise((resolve, reject) => {
-    request.get(my_options, function(error, response, body) {
-      if(error){
-        reject(error);
-      }else{
-        if(response.statusCode==200){
-          resolve(JSON.parse(body));
-        } else {
-          resolve(null);
+function apiCall(my_options, MODE = 'GET') {
+  if (MODE === 'GET') {
+    const promise = new Promise((resolve, reject) => {
+      request.get(my_options, function(error, response, body) {
+        if(error){
+          reject(error);
+        }else{
+          if(response.statusCode==200){
+            resolve(JSON.parse(body));
+          } else {
+            resolve(null);
+          }
         }
-      }
-    });
-  }).then(data => data);
-  return promise;
+      });
+    }).then(data => data);
+    return promise;
+  } else if (MODE === 'POST') {
+    const promise = new Promise((resolve, reject) => {
+      request.post(my_options, function(error, response, body) {
+        if(error){
+          reject(error);
+        }else{
+          if(response.statusCode === 201) {
+            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+            resolve(JSON.parse(body));
+          }else {
+            resolve(null);
+          }
+        }
+      });
+    }).then(data => data);
+    return promise;
+  }
 }
 
 /** 
@@ -134,9 +153,18 @@ async function commitFiles(head){
           console.log(base_tree);
           const productTree = base_tree.tree.filter(item => item.path === 'products');
           console.log(productTree);
-          my_options['url'] = productTree.url;
+          my_options['url'] = productTree[0].url;
           const productTreeList = await apiCall(my_options);
           console.log(productTreeList);
+          const newProductTreeList = productTreeList.tree.filter(item => item.path !== file.split('/')[1]);
+          console.log(newProductTreeList,"new Product");
+          my_options['url'] = baseURL + 'git/trees'; // to create a new product tree without the file
+          my_options['body'] = JSON.stringify({
+            "tree": newProductTreeList,
+          });
+          const newPL = await apiCall(my_options, 'POST');
+          console.log(newPL, 'newPL');
+          
         }
         else console.log("file not deleted")
         fileContents = fs.readFileSync(file, 'utf8')
