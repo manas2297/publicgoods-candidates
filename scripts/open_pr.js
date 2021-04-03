@@ -155,7 +155,7 @@ async function commitFiles(head){
           console.log(productTree);
           my_options['url'] = productTree[0].url;
           const productTreeList = await apiCall(my_options); // products folder list
-          console.log(productTreeList);
+          // console.log(productTreeList);
           const newProductTreeList = productTreeList.tree.filter(item => item.path !== file.split('/')[1]);
           console.log(newProductTreeList,"new Product");
           my_options['url'] = baseURL + 'git/trees'; // to create a new product tree without the file
@@ -173,6 +173,7 @@ async function commitFiles(head){
           my_options['body'] = JSON.stringify({
             "tree": base_tree,
           });
+          console.log(my_options);
           const newBaseTree = await apiCall(my_options, 'POST');
           console.log(newBaseTree);
           //commit create krna hai
