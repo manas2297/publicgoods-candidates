@@ -3,7 +3,7 @@ const path = require('path');
 const btoa = require('btoa');
 const request = require('request');
 
-const githubUser = 'publicgoods';
+const githubUser = 'manas2297';
 const githubRepo = 'products';
 const baseURL = 'https://api.github.com/repos/' + githubUser + '/' + githubRepo + '/';
 
@@ -11,7 +11,7 @@ const branchName = 'unicef/publicgoods-candidates-'+process.env.GITHUB_SHA.subst
 
 options = {
   auth: {
-    'user': 'lacabra',
+    'user': 'manas2297',
     'pass': process.env.GITHUBTOKEN
   },
   headers: {
@@ -118,32 +118,39 @@ async function commitFiles(){
           }
         });
       });
-
-      const responseIfFileExists = await promise;
-      const fileContents = fs.readFileSync(file, 'utf8');
-      var body = {
-        'content': btoa(fileContents),
-        'branch': branchName
-      }
-      if(responseIfFileExists){
-        body['message'] = 'BLD: edit file ' + file;
-        body['sha'] = responseIfFileExists['sha'];
-      }else{
-        body['message'] = 'BLD: add file ' + file;
-      }
-      my_options['body'] = JSON.stringify(body);
-
-      promise = new Promise((resolve, reject) => {
-        request.put(my_options, function(error, response, body) {
-          if(error){
-            reject(error);
-          }else{
-            resolve(body);
-          }
+      let responseIfFileExists;
+      let fileContents;
+      try{
+        responseIfFileExists = await promise;
+        if (!fs.existsSync(file)) console.log("No file")
+        else console.log("file not deleted")
+        fileContents = fs.readFileSync(file, 'utf8')
+        var body = {
+          'content': btoa(fileContents),
+          'branch': branchName
+        }
+        if(responseIfFileExists){
+          body['message'] = 'BLD: edit file ' + file;
+          body['sha'] = responseIfFileExists['sha'];
+        }else{
+          body['message'] = 'BLD: add file ' + file;
+        }
+        my_options['body'] = JSON.stringify(body);
+  
+        promise = new Promise((resolve, reject) => {
+          request.put(my_options, function(error, response, body) {
+            if(error){
+              reject(error);
+            }else{
+              resolve(body);
+            }
+          });
         });
-      });
-      response = await promise;
-      console.log('Received response: ' + response)
+        response = await promise;
+        console.log('Received response: ' + response)
+      } catch (err) {
+        console.error(err.message);
+      }
     }
   }
   createPR(commitFiles);
