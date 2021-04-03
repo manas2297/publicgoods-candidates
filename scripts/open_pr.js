@@ -127,7 +127,6 @@ async function commitFiles(head){
       let fileContents;
       try{
         let promise = await apiCall(my_options);
-        console.log(promise);
         responseIfFileExists = promise;
         if (!fs.existsSync(file)) {
           my_options['url'] = baseURL + 'git/trees/' + head;
