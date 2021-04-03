@@ -149,12 +149,12 @@ async function commitFiles(head){
         responseIfFileExists = promise;
         if (!fs.existsSync(file)) {
           my_options['url'] = baseURL + 'git/trees/' + head;
-          const base_tree = await apiCall(my_options);
+          let base_tree = await apiCall(my_options); // for original
           console.log(base_tree);
           const productTree = base_tree.tree.filter(item => item.path === 'products');
           console.log(productTree);
           my_options['url'] = productTree[0].url;
-          const productTreeList = await apiCall(my_options);
+          const productTreeList = await apiCall(my_options); // products folder list
           console.log(productTreeList);
           const newProductTreeList = productTreeList.tree.filter(item => item.path !== file.split('/')[1]);
           console.log(newProductTreeList,"new Product");
@@ -164,9 +164,35 @@ async function commitFiles(head){
           });
           const newPL = await apiCall(my_options, 'POST');
           console.log(newPL, 'newPL');
-          
+          base_tree = base_tree.tree.map(item => {
+            if (item.path === 'products') {
+              item.sha = newPL.sha;
+              item.url = newPL.url;
+            }
+          });
+          my_options['body'] = JSON.stringify({
+            "tree": base_tree,
+          });
+          const newBaseTree = await apiCall(my_options, 'POST');
+          console.log(newBaseTree);
+          //commit create krna hai
+          let body = {
+            'message': 'BLD: delete file' + file,
+            'sha': newBaseTree.sha,
+          };
+
+          my_options['body'] = JSON.stringify(body);
+          my_options['url'] = baseURL + 'git/commits';
+          const response = await apiCall(my_options, 'POST');
+          console.log(response, 'reponse');
+
+
+
+
         }
         else console.log("file not deleted")
+
+
         fileContents = fs.readFileSync(file, 'utf8')
         var body = {
           'content': btoa(fileContents),
